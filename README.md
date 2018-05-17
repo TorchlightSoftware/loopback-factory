@@ -9,7 +9,7 @@ Define reusable data generators in `fixtures/test-data.js` like such:
 ```js
 module.exports = (Factory) => {
   // you'll be passed a Factory object with a models property on it that includes all the loopback models
-  const {Account, AccountCompany, AccountUser} = Factory.models
+  const {Account, User} = Factory.models
 
   // derive your generator from an existing model
   Factory.define('Account', Account, {
@@ -38,9 +38,9 @@ describe('my tests', function() {
     this.Factory = F({models, definitions})
   })
 
-  describe('AccountUser', function() {
+  describe('Account', function() {
     beforeEach('create a user', function(done) {
-      Factory.create('AccountUser', {email: 'foo@bar.com', password: 'foobar'}, done)
+      Factory.create('Account', {email: 'foo@bar.com', password: 'foobar'}, done)
     })
   })
 })
