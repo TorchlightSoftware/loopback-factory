@@ -55,3 +55,9 @@ createGroup
 clearAll
 service
 ```
+
+### Generating complex relationships
+
+For more complex relationships, like if you want to seed a relational database, `loopback-factory` is designed to work well with a service composition tool called [microql](https://github.com/TorchlightSoftware/microql).
+
+[Here's an example.](docs/microql-seed.md)
