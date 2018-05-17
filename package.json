@@ -1,0 +1,26 @@
+{
+  "name": "loopback-factory",
+  "version": "0.1.0",
+  "description": "Convenient data creation for Loopback for testing or seed purposes.",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TorchlightSoftware/loopback-factory.git"
+  },
+  "keywords": [
+    "factory",
+    "test",
+    "loopback",
+    "data",
+    "seed"
+  ],
+  "author": "q@bitmage.net",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/TorchlightSoftware/loopback-factory/issues"
+  },
+  "homepage": "https://github.com/TorchlightSoftware/loopback-factory#readme"
+}
