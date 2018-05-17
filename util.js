@@ -1,5 +1,6 @@
 const _ = require('lodash')
     , {join} = require('path')
+    , async = require('async')
 
 module.exports = {
   obj(key, val) {
