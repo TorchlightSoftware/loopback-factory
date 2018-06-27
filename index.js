@@ -1,22 +1,46 @@
+'use strict'
+
 const async = require('async')
     , _ = require('lodash')
-    , torch = require('torch')
 
 const {getModelSummary, objMapAsync, getType} = require('./util')
 
+// PRIVATE METHODS
+// call possibly async functions
+const callFn = (fn, next) =>
+  fn.length === 0 ? next(null, fn()) : fn(next)
+
+// resolve property that is possibly a function or a promise
+const resolveProperty = (prop, next) => {
+  if (getType(prop) === 'Function') {
+    callFn(prop, next)
+  } else if (getType(prop) === 'Promise') {
+    prop.catch(next).then(result => next(null, result))
+  } else {
+    next(null, prop)
+  }
+}
+
+// resolve all properties
+const resolveProperties = (props, next) => objMapAsync(props, resolveProperty, next)
+
+// return a promise if no callback was provided
+const promisify = (fn) => function(...args) {
+
+  // if we got a callback then call the function as normal
+  const last = args[args.length - 1]
+  if (getType(last) === 'Function') {
+    fn.call(this, ...args)
+
+    // otherwise wrap it in a promise
+  } else {
+    return new Promise((resolve, reject) =>
+      fn.call(this, ...args, (err, result) => err ? reject(err) : resolve(result))
+    )
+  }
+}
+
 module.exports = function({models, definitions}) {
-
-  // PRIVATE METHODS
-  // call possibly async functions
-  const callFn = (fn, next) =>
-    fn.length === 0 ? next(null, fn()) : fn(next)
-
-  // resolve property that is possibly a function
-  const resolveProperty = (prop, next) =>
-    getType(prop) === 'Function' ? callFn(prop, next) : next(null, prop)
-
-  // resolve all properties
-  const resolveProperties = (props, next) => objMapAsync(props, resolveProperty, next)
 
   // PUBLIC Factory API
   const Factory = {
@@ -29,11 +53,12 @@ module.exports = function({models, definitions}) {
         props: props
       }
     },
-    create(name, props, done) {
+    create: promisify(function(name, props, done) {
       if ((getType(props) === 'Function') && (done == null)) {
         done = props
         props = {}
       }
+
       const template = this.__definitions[name]
       if (!template) return done(new Error(`Factory: No definition for '${name}'.`))
 
@@ -49,14 +74,13 @@ module.exports = function({models, definitions}) {
         return resolveProperties(finalProps, function(err, resolvedProps) {
           if (err) return done(err)
 
-          // torch.magenta 'creating:', {name, finalProps, resolvedProps}
           return template.model.create(resolvedProps, done)
         })
       }
-    },
-    createRef(name, fields, done) {
+    }),
+    createRef: promisify(function(name, fields, done) {
       return this.create(name, fields, (err, obj) => done(err, obj != null ? obj.id : undefined))
-    },
+    }),
     assemble(name, fields) {
       return (cb) => this.createRef(name, fields, cb)
     },
@@ -68,7 +92,7 @@ module.exports = function({models, definitions}) {
       records = _.map(records, r => _.merge({}, shared, r))
       return (cb) => async.map(records, this.createRef.bind(this, name), cb)
     },
-    createGroup(name, records, shared, done) {
+    createGroup: promisify(function(name, records, shared, done) {
       if (arguments.length === 3) {
         return this.createGroup(name, records, null, shared)
       }
@@ -77,11 +101,11 @@ module.exports = function({models, definitions}) {
       }
       records = _.map(records, r => _.merge({}, shared, r))
       return async.map(records, this.create.bind(this, name), done)
-    },
-    clearAll(done) {
+    }),
+    clearAll: promisify(function(done) {
       const removeData = (model, next) => model.destroyAll ? model.destroyAll({}, next) : next()
       return objMapAsync(models, removeData, done)
-    },
+    }),
     service: (action, {args}, next) => Factory[action](...args, next)
   }
   definitions(Factory)

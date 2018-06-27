@@ -46,6 +46,17 @@ describe('my tests', function() {
 })
 ```
 
+##Promises
+
+Includes support for promises:
+
+```js
+beforeEach('create a user', async () => {
+  await Factory.create('Account', {email: 'foo@bar.com', password: 'foobar'})
+})
+
+```
+
 TODO: document the rest of the features:
 
 ```
@@ -61,3 +72,7 @@ service
 For more complex relationships, like if you want to seed a relational database, `loopback-factory` is designed to work well with a service composition tool called [microql](https://github.com/TorchlightSoftware/microql).
 
 [Here's an example.](docs/microql-seed.md)
+
+## The Tests in this Project
+
+Note that the `sample-project` has a modified `server.js` file - the `start` method has been modified to call a callback when complete, and only call it once.  This makes testing easier - you can require the app from multiple tests and ask it to start, and if it has already started it will just return the existing instance.
